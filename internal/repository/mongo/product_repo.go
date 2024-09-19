@@ -1,7 +1,8 @@
 package mongo
 
 import (
-	"CRUD-Go-Hexa-MongoDB/internal/domain/product"
+	product "CRUD-Go-Hexa-MongoDB/internal/domain/models" // Import only product entity
+	"CRUD-Go-Hexa-MongoDB/internal/ports"                 // Import ports for Repository interface
 	"context"
 	"time"
 
@@ -14,7 +15,8 @@ type ProductRepository struct {
 	collection *mongo.Collection
 }
 
-func NewProductRepository(db *mongo.Database) product.Repository {
+// NewProductRepository now returns ports.Repository instead of product.Repository
+func NewProductRepository(db *mongo.Database) ports.Repository {
 	return &ProductRepository{
 		collection: db.Collection("products"),
 	}

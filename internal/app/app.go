@@ -1,7 +1,9 @@
+// act as a router
+
 package app
 
 import (
-	"CRUD-Go-Hexa-MongoDB/internal/controllers"
+	handlers "CRUD-Go-Hexa-MongoDB/internal/handlers"
 	mongoRepo "CRUD-Go-Hexa-MongoDB/internal/repository/mongo"
 	"CRUD-Go-Hexa-MongoDB/internal/services"
 	"CRUD-Go-Hexa-MongoDB/pkg/config"
@@ -36,7 +38,7 @@ func Setup() *fiber.App {
 	db := client.Database(cfg.DBName)
 	productRepo := mongoRepo.NewProductRepository(db)
 	productService := services.NewProductService(productRepo)
-	productController := controllers.NewProductController(productService)
+	productController := handlers.NewProductController(productService)
 
 	app := fiber.New()
 	app.Get("/products", productController.FindAll)
