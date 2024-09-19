@@ -109,3 +109,129 @@ func TestFindByID(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 }
+
+func TestCreate(t *testing.T) {
+	// Setup
+	mockRepo := new(MockRepository)
+	productService := NewProductService(mockRepo)
+
+	t.Run("creates product successfully", func(t *testing.T) {
+		mockProduct := product.Product{
+			ID:    uuid.New(),
+			Name:  "Product 1",
+			Stock: 10,
+		}
+
+		mockRepo.On("Create", mockProduct).Return(nil)
+
+		err := productService.Create(mockProduct)
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+		mockRepo.ExpectedCalls = nil //reset expectations after each test
+	})
+
+	t.Run("returns error when name is empty/null", func(t *testing.T) {
+		mockProduct := product.Product{
+			ID:    uuid.New(),
+			Name:  "",
+			Stock: 10,
+		}
+
+		err := productService.Create(mockProduct)
+		assert.Error(t, err)
+		mockRepo.AssertExpectations(t)
+		mockRepo.ExpectedCalls = nil //reset expectations after each test
+	})
+
+	t.Run("returns error when stock is negative", func(t *testing.T) {
+		mockProduct := product.Product{
+			ID:    uuid.New(),
+			Name:  "Product 1",
+			Stock: -1,
+		}
+
+		err := productService.Create(mockProduct)
+		assert.Error(t, err)
+		mockRepo.AssertExpectations(t)
+		mockRepo.ExpectedCalls = nil //reset expectations after each test
+	})
+}
+
+func TestUpdate(t *testing.T) {
+	// Setup
+	mockRepo := new(MockRepository)
+	productService := NewProductService(mockRepo)
+
+	t.Run("updates product successfully", func(t *testing.T) {
+		mockProduct := product.Product{
+			ID:    uuid.New(),
+			Name:  "Product 1",
+			Stock: 10,
+		}
+
+		mockRepo.On("Update", mockProduct).Return(nil)
+
+		err := productService.Update(mockProduct)
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+		mockRepo.ExpectedCalls = nil //reset expectations after each test
+	})
+
+	t.Run("returns error when product not found", func(t *testing.T) {
+		nonExistentID := uuid.New()
+		mockProduct := product.Product{
+			ID:    nonExistentID,
+			Name:  "Product 1",
+			Stock: 10,
+		}
+
+		mockRepo.On("Update", mockProduct).Return(mongo.ErrNoDocuments)
+
+		err := productService.Update(mockProduct)
+		assert.Error(t, err)
+		mockRepo.AssertExpectations(t)
+		mockRepo.ExpectedCalls = nil //reset expectations after each test
+	})
+
+	t.Run("returns error when stock is negative", func(t *testing.T) {
+		mockProduct := product.Product{
+			ID:    uuid.New(),
+			Name:  "Product 1",
+			Stock: -1,
+		}
+
+		err := productService.Update(mockProduct)
+		assert.Error(t, err)
+		mockRepo.AssertExpectations(t)
+		mockRepo.ExpectedCalls = nil //reset expectations after each test
+	})
+}
+
+func TestDelete(t *testing.T) {
+	// Setup
+	mockRepo := new(MockRepository)
+	productService := NewProductService(mockRepo)
+
+	t.Run("deletes product successfully", func(t *testing.T) {
+		mockProduct := product.Product{
+			ID: uuid.New(),
+		}
+
+		mockRepo.On("Delete", mockProduct.ID).Return(nil)
+
+		err := productService.Delete(mockProduct.ID)
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+		mockRepo.ExpectedCalls = nil //reset expectations after each test
+	})
+
+	t.Run("returns error when product not found", func(t *testing.T) {
+		nonExistentID := uuid.New()
+		mockRepo.On("Delete", nonExistentID).Return(mongo.ErrNoDocuments)
+
+		err := productService.Delete(nonExistentID)
+		assert.Error(t, mongo.ErrNoDocuments, err)
+		mockRepo.AssertExpectations(t)
+		mockRepo.ExpectedCalls = nil //reset expectations after each test
+	})
+}

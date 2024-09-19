@@ -59,9 +59,9 @@ func (c *ProductController) Create(ctx *fiber.Ctx) error {
 	}
 
 	stock, err := strconv.Atoi(stockStr)
-	if err != nil {
+	if err != nil || stock < 0 {
 		errCount++
-		arrErrors = append(arrErrors, "Invalid Stock Value, must be a number and not empty")
+		arrErrors = append(arrErrors, "Invalid Stock Value, must be a number and greater than 0")
 	}
 
 	if errCount > 0 {
