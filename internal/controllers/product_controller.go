@@ -5,11 +5,13 @@ package controllers
 import (
 	"CRUD-Go-Hexa-MongoDB/internal/domain/product"
 	"CRUD-Go-Hexa-MongoDB/internal/services"
+	"CRUD-Go-Hexa-MongoDB/internal/utils"
 
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ProductController struct {
@@ -25,20 +27,21 @@ func NewProductController(productService *services.ProductService) *ProductContr
 func (c *ProductController) FindAll(ctx *fiber.Ctx) error {
 	products, err := c.productService.FindAll()
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+		return utils.InternalServerErrorResponse(ctx, err)
 	}
 	return ctx.Status(fiber.StatusOK).JSON(products)
 }
 
 func (c *ProductController) FindByID(ctx *fiber.Ctx) error {
-	id := ctx.Params("id")
-	product, err := c.productService.FindByID(uuid.MustParse(id))
+	idStr := ctx.Params("id")
+	id, err := uuid.Parse(idStr)
+
+	product, err := c.productService.FindByID(id)
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+		if err == mongo.ErrNoDocuments {
+			return utils.NotFoundResponse(ctx, idStr)
+		}
+		return utils.InternalServerErrorResponse(ctx, err)
 	}
 	return ctx.Status(fiber.StatusOK).JSON(product)
 }
@@ -47,14 +50,23 @@ func (c *ProductController) Create(ctx *fiber.Ctx) error {
 	name := ctx.FormValue("name")
 	stockStr := ctx.FormValue("stock")
 
+	var errCount = 0
+	var arrErrors = make([]string, 0)
+
 	if name == "" {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Name cannot be empty"})
+		errCount++
+		arrErrors = append(arrErrors, "Name cannot be empty")
 	}
 
 	stock, err := strconv.Atoi(stockStr)
 	if err != nil {
+		errCount++
+		arrErrors = append(arrErrors, "Invalid Stock Value, must be a number and not empty")
+	}
+
+	if errCount > 0 {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"Invalid Stock Value": err.Error(),
+			"errors": arrErrors,
 		})
 	}
 
@@ -65,49 +77,61 @@ func (c *ProductController) Create(ctx *fiber.Ctx) error {
 	}
 
 	if err := c.productService.Create(product); err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+		return utils.InternalServerErrorResponse(ctx, err)
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(product)
 }
 
 func (c *ProductController) Update(ctx *fiber.Ctx) error {
-	id, err := uuid.Parse(ctx.Params("id"))
+	idStr := ctx.Params("id")
+	id, err := uuid.Parse(idStr)
 
+	existingProduct, err := c.productService.FindByID(id)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"Invalid ID": err.Error(),
-		})
+		if err == mongo.ErrNoDocuments {
+			return utils.NotFoundResponse(ctx, idStr)
+		}
+		return utils.InternalServerErrorResponse(ctx, err)
 	}
 
 	name := ctx.FormValue("name")
 	stockStr := ctx.FormValue("stock")
 
-	stock, err := strconv.Atoi(stockStr)
-	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"Invalid Stock Value": err.Error(),
-		})
+	if name != "" {
+		existingProduct.Name = name
 	}
 
-	product := product.Product{
-		ID:    id,
-		Name:  name,
-		Stock: stock,
+	if stockStr != "" {
+		stock, err := strconv.Atoi(stockStr)
+		if err != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"Invalid Stock Value": err.Error(),
+			})
+		}
+		existingProduct.Stock = stock
 	}
-	return ctx.Status(fiber.StatusOK).JSON(product)
+
+	if err := c.productService.Update(existingProduct); err != nil {
+		return utils.InternalServerErrorResponse(ctx, err)
+	}
+	return ctx.Status(fiber.StatusOK).JSON(existingProduct)
 }
 
 func (c *ProductController) Delete(ctx *fiber.Ctx) error {
-	id := ctx.Params("id")
+	idStr := ctx.Params("id")
+	id, err := uuid.Parse(idStr)
 
-	err := c.productService.Delete(uuid.MustParse(id))
+	// Check if the product exists
+	_, err = c.productService.FindByID(id)
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+		if err == mongo.ErrNoDocuments {
+			return utils.NotFoundResponse(ctx, idStr)
+		}
+		return utils.InternalServerErrorResponse(ctx, err)
 	}
-	return ctx.SendStatus(fiber.StatusOK)
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Product deleted successfully",
+	})
 }
