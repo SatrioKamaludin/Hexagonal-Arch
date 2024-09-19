@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Mock Repository
@@ -73,6 +74,38 @@ func TestFindAll(t *testing.T) {
 		products, err := productService.FindAll()
 		assert.NoError(t, err)
 		assert.Empty(t, products)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestFindByID(t *testing.T) {
+	// Setup
+	mockRepo := new(MockRepository)
+	productService := NewProductService(mockRepo)
+
+	t.Run("returns product by id", func(t *testing.T) {
+		mockProduct := product.Product{
+			ID:    uuid.New(),
+			Name:  "Product 1",
+			Stock: 10,
+		}
+
+		mockRepo.On("FindByID", mockProduct.ID).Return(mockProduct, nil)
+
+		product, err := productService.FindByID(mockProduct.ID)
+		assert.NoError(t, err)
+		assert.Equal(t, mockProduct, product)
+		mockRepo.AssertExpectations(t)
+		mockRepo.ExpectedCalls = nil //reset expectations after each test
+	})
+
+	t.Run("returns error when product not found", func(t *testing.T) {
+		nonExistentID := uuid.New()
+		mockRepo.On("FindByID", nonExistentID).Return(product.Product{}, nil)
+
+		foundProduct, err := productService.FindByID(nonExistentID)
+		assert.Error(t, mongo.ErrNoDocuments, err)
+		assert.Equal(t, product.Product{}, foundProduct)
 		mockRepo.AssertExpectations(t)
 	})
 }
