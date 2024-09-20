@@ -4,10 +4,11 @@ package app
 
 import (
 	handlers "CRUD-Go-Hexa-MongoDB/internal/handlers"
+	"context"
 	"database/sql"
 	"fmt"
 
-	// mongoRepo "CRUD-Go-Hexa-MongoDB/internal/repository/mongo"
+	mongoRepo "CRUD-Go-Hexa-MongoDB/internal/repository/mongo"
 	postgreSQLRepo "CRUD-Go-Hexa-MongoDB/internal/repository/postgresql"
 	"CRUD-Go-Hexa-MongoDB/internal/services"
 	"CRUD-Go-Hexa-MongoDB/pkg/config"
@@ -17,20 +18,29 @@ import (
 	// "time"
 
 	"github.com/gofiber/fiber/v2"
-	// mongoDriver "go.mongodb.org/mongo-driver/mongo"
-	// "go.mongodb.org/mongo-driver/mongo/options"
 	_ "github.com/lib/pq"
+	mongoDriver "go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func Setup() *fiber.App {
 	cfg := config.LoadConfig()
 
-	// clientOptions := options.Client().ApplyURI(cfg.MongoURI)
+	//Connect to MongoDB
+	clientOptions := options.Client().ApplyURI(cfg.MongoURI)
+	client, err := mongoDriver.Connect(context.Background(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// client, err := mongoDriver.Connect(context.Background(), clientOptions)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	//Ping to MongoDB
+	err = client.Ping(context.Background(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//Obtain reference to MongoDB database
+	mongoDB := client.Database(cfg.DBName)
 
 	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	// defer cancel()
@@ -40,6 +50,7 @@ func Setup() *fiber.App {
 	// 	log.Fatal(err)
 	// }
 
+	//Connect to PostgreSQL
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		cfg.PostgresHost, cfg.PostgresPort, cfg.PostgresUser, cfg.PostgresPass, cfg.PostgresDBName)
 
@@ -53,9 +64,12 @@ func Setup() *fiber.App {
 		log.Fatal(err)
 	}
 
+	profilingRepo := mongoRepo.NewProfilingRepository(mongoDB)
+	profilingService := services.NewProfilingService(profilingRepo)
+
 	productRepo := postgreSQLRepo.NewProductRepository(db)
 	productService := services.NewProductService(productRepo)
-	productController := handlers.NewProductController(productService)
+	productController := handlers.NewProductController(productService, profilingService)
 
 	app := fiber.New()
 	app.Get("/products", productController.FindAll)

@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"CRUD-Go-Hexa-MongoDB/internal/domain/models"
+	"CRUD-Go-Hexa-MongoDB/internal/ports"
 	"context"
 	"time"
 
@@ -12,7 +13,7 @@ type ProfilingRepository struct {
 	collection *mongo.Collection
 }
 
-func NewProfilingRepository(db *mongo.Database) *ProfilingRepository {
+func NewProfilingRepository(db *mongo.Database) ports.ProfilingRepository {
 	return &ProfilingRepository{
 		collection: db.Collection("profiling"),
 	}
