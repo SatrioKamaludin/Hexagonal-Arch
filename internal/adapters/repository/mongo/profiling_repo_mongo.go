@@ -13,7 +13,7 @@ type ProfilingRepository struct {
 	collection *mongo.Collection
 }
 
-func NewProfilingRepository(db *mongo.Database) ports.ProfilingRepository {
+func NewProfilingRepository(db *mongo.Database) ports.IProfilingRepository {
 	return &ProfilingRepository{
 		collection: db.Collection("profiling"),
 	}

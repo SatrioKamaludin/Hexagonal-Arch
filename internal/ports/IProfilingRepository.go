@@ -4,6 +4,6 @@ import (
 	"CRUD-Go-Hexa-MongoDB/internal/domain/models"
 )
 
-type ProfilingRepository interface {
+type IProfilingRepository interface {
 	Create(profiling models.Profiling) error
 }

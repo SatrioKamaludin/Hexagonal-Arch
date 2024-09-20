@@ -13,7 +13,7 @@ type ProductRepository struct {
 	db *sql.DB
 }
 
-func NewProductRepository(db *sql.DB) ports.Repository {
+func NewProductRepository(db *sql.DB) ports.IProductRepository {
 	return &ProductRepository{db: db}
 }
 

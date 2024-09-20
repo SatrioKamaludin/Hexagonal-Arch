@@ -3,14 +3,14 @@
 package app
 
 import (
-	handlers "CRUD-Go-Hexa-MongoDB/internal/handlers"
+	handlers "CRUD-Go-Hexa-MongoDB/internal/adapters/handlers"
 	"context"
 	"database/sql"
 	"fmt"
 
-	mongoRepo "CRUD-Go-Hexa-MongoDB/internal/repository/mongo"
-	postgreSQLRepo "CRUD-Go-Hexa-MongoDB/internal/repository/postgresql"
-	"CRUD-Go-Hexa-MongoDB/internal/services"
+	mongoRepo "CRUD-Go-Hexa-MongoDB/internal/adapters/repository/mongo"
+	postgreSQLRepo "CRUD-Go-Hexa-MongoDB/internal/adapters/repository/postgresql"
+	"CRUD-Go-Hexa-MongoDB/internal/domain/services"
 	"CRUD-Go-Hexa-MongoDB/pkg/config"
 
 	// "context"

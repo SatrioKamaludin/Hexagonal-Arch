@@ -16,7 +16,7 @@ type ProductRepository struct {
 }
 
 // NewProductRepository now returns ports.Repository instead of product.Repository
-func NewProductRepository(db *mongo.Database) ports.Repository {
+func NewProductRepository(db *mongo.Database) ports.IProductRepository {
 	return &ProductRepository{
 		collection: db.Collection("products"),
 	}

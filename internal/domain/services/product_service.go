@@ -13,10 +13,10 @@ import (
 )
 
 type ProductService struct {
-	productRepo ports.Repository
+	productRepo ports.IProductRepository
 }
 
-func NewProductService(productRepo ports.Repository) *ProductService {
+func NewProductService(productRepo ports.IProductRepository) *ProductService {
 	return &ProductService{
 		productRepo: productRepo,
 	}

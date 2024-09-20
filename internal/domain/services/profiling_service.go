@@ -7,10 +7,10 @@ import (
 )
 
 type ProfilingService struct {
-	profilingRepo ports.ProfilingRepository
+	profilingRepo ports.IProfilingRepository
 }
 
-func NewProfilingService(profilingRepo ports.ProfilingRepository) *ProfilingService {
+func NewProfilingService(profilingRepo ports.IProfilingRepository) *ProfilingService {
 	return &ProfilingService{
 		profilingRepo: profilingRepo,
 	}

@@ -7,7 +7,7 @@ import (
 )
 
 // Repository defines the interface for product operations
-type Repository interface {
+type IProductRepository interface {
 	FindAll() ([]product.Product, error) // Ensure the correct product type
 	FindByID(id uuid.UUID) (product.Product, error)
 	Create(product product.Product) error // Use product.Product here
