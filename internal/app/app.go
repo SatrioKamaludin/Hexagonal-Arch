@@ -42,14 +42,6 @@ func Setup() *fiber.App {
 	//Obtain reference to MongoDB database
 	mongoDB := client.Database(cfg.DBName)
 
-	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	// defer cancel()
-
-	// err = client.Ping(ctx, nil)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	//Connect to PostgreSQL
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		cfg.PostgresHost, cfg.PostgresPort, cfg.PostgresUser, cfg.PostgresPass, cfg.PostgresDBName)

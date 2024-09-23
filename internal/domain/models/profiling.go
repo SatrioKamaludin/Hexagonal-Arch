@@ -10,5 +10,5 @@ type Profiling struct {
 	ID        uuid.UUID `json:"id"`
 	APICall   string    `json:"method"`
 	Duration  int64     `json:"duration"`
-	Timestamp time.Time `son:"timestamp"`
+	Timestamp time.Time `json:"timestamp"`
 }
